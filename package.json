@@ -1,0 +1,14 @@
+{
+  "name": "greek-certificates",
+  "version": "1.0.0",
+  "description": "Учёт сертификатов по греческому, которые я забираю по доверенности",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy"
+  },
+  "devDependencies": {
+    "wrangler": "^4.127.1"
+  }
+}

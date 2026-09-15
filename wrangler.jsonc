@@ -1,0 +1,15 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "greek-certs",
+  "main": "worker/index.js",
+  "compatibility_date": "2026-09-01",
+  // Страница живёт на GitHub Pages; воркер — только API с данными.
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "greek-certs",
+      "database_id": "e4f9c687-0eac-4b34-8bad-d234ff57e428"
+    }
+  ],
+  "observability": { "enabled": true }
+}
