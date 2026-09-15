@@ -152,35 +152,62 @@
     background: var(--surface); border: 1px solid var(--line); border-radius: 14px;
     box-shadow: var(--shadow); overflow: hidden;
   }
-  .card-head {
-    display: grid; grid-template-columns: 1fr auto; align-items: start; gap: 8px 12px;
-    width: 100%; padding: 14px 16px; background: none; border: 0; text-align: left;
+  /* Короткий вид: вся карточка — одна кнопка «редактировать» */
+  .card-main {
+    display: grid; gap: 10px; width: 100%; padding: 14px 16px 14px;
+    background: none; border: 0; text-align: left;
   }
-  .who { display: grid; gap: 1px; min-width: 0; }
-  .name { font-size: 17px; font-weight: 600; overflow-wrap: anywhere; }
+  .card-top { display: grid; gap: 4px; min-width: 0; padding-right: 44px; }
+  .card.has-tg .card-top { padding-right: 94px; }
+  .name { font-size: 17px; font-weight: 600; overflow-wrap: anywhere; line-height: 1.3; }
+  .status-line { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; }
   .sub { font-size: 13px; color: var(--muted); overflow-wrap: anywhere; }
   .pill {
-    font-size: 12px; font-weight: 600; padding: 3px 9px; border-radius: 999px;
-    white-space: nowrap; margin-top: 2px;
+    font-size: 12px; font-weight: 600; padding: 2px 9px; border-radius: 999px;
+    white-space: nowrap;
+  }
+  .facts {
+    margin: 0; display: grid; grid-template-columns: 84px 1fr; gap: 4px 10px;
+    font-size: 14px; line-height: 1.35;
+    border-top: 1px solid var(--line); padding-top: 10px;
+  }
+  .facts dt { color: var(--muted); font-size: 13px; line-height: 1.45; }
+  .facts dd { margin: 0; min-width: 0; overflow-wrap: anywhere; }
+  .facts .ok { color: var(--ready); }
+  .facts .todo { color: var(--wait); }
+  .facts .soft { color: var(--muted); }
+  .facts .note { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; color: var(--muted); }
+  .card-actions { position: absolute; top: 10px; right: 10px; display: flex; gap: 6px; }
+  .icon-btn {
+    width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center;
+    border: 0; background: var(--surface-2); color: var(--muted); text-decoration: none;
+  }
+  .icon-btn svg { width: 20px; height: 20px; }
+  .icon-btn.tg { background: var(--accent-soft); color: var(--accent); }
+  .icon-btn.tg svg { width: 21px; height: 21px; margin-left: -2px; }
+
+  /* Режим редактирования */
+  .card.editing { border-color: var(--accent); }
+  .edit-head {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    padding: 10px 10px 10px 16px;
+  }
+  .edit-head .name { min-width: 0; }
+  .done-btn {
+    flex: none; min-height: 40px; padding: 0 16px; border-radius: 10px; border: 0;
+    background: var(--accent); color: var(--accent-ink); font-weight: 600;
+  }
+  .edit-foot { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding-top: 8px; }
+  .edit-foot .done-btn { min-height: 44px; padding: 0 22px; }
+  @media (prefers-reduced-motion: no-preference) {
+    .card.fresh { animation: fresh 1.6s ease-out; }
+    @keyframes fresh { from { box-shadow: 0 0 0 3px var(--accent); } to { box-shadow: var(--shadow); } }
   }
   .s-wait { background: var(--wait-soft); color: var(--wait); }
   .s-print { background: var(--print-soft); color: var(--print); }
   .s-contact { background: var(--accent-soft); color: var(--accent); }
   .s-ready, .s-taken { background: var(--ready-soft); color: var(--ready); }
   .s-given { background: var(--surface-2); color: var(--muted); border: 1px solid var(--line); }
-  .marks { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 5px; }
-  .mark {
-    font-size: 12px; line-height: 1; padding: 5px 8px; border-radius: 6px;
-    border: 1px dashed var(--line); color: var(--muted);
-  }
-  .mark.m1 { border-style: solid; border-color: transparent; background: var(--wait-soft); color: var(--wait); }
-  .mark.m2 { border-style: solid; border-color: transparent; background: var(--ready-soft); color: var(--ready); }
-  .card-head .chev {
-    grid-column: 1 / -1; justify-self: center; width: 28px; height: 4px; border-radius: 2px;
-    background: var(--line); margin-top: 2px;
-  }
-  .card-head[aria-expanded="true"] .chev { display: none; }
-
   .card-body {
     border-top: 1px solid var(--line); background: var(--surface-2);
     padding: 4px 16px 16px; display: grid; gap: 4px;
@@ -324,13 +351,6 @@
 
   /* Telegram */
   .card { position: relative; }
-  .card.has-tg .card-head { padding-right: 64px; }
-  .tg-quick {
-    position: absolute; top: 10px; right: 10px; width: 44px; height: 44px; border-radius: 50%;
-    display: grid; place-items: center; background: var(--accent-soft); color: var(--accent);
-    text-decoration: none;
-  }
-  .tg-quick svg { width: 22px; height: 22px; margin-left: -2px; }
   .tg-hint { font-size: 13px; color: var(--muted); }
   .tg-hint a { color: var(--accent); }
   .tg-hint.bad { color: var(--danger); }
@@ -415,9 +435,9 @@
     : "https://greek-certs.norevia.workers.dev";
 
   const DOCS = [
-    { k: "proxy", ru: "Доверенность", gr: "εξουσιοδότηση", short: "доверенность" },
-    { k: "id", ru: "Удостоверение личности", gr: "ταυτότητα", short: "удостоверение" },
-    { k: "card", ru: "Карточка участника", gr: "κάρτα υποψηφίου", short: "карточка" },
+    { k: "proxy", ru: "Доверенность", gr: "εξουσιοδότηση", gen: "доверенности", acc: "доверенность" },
+    { k: "id", ru: "Удостоверение личности", gr: "ταυτότητα", gen: "удостоверения", acc: "удостоверение" },
+    { k: "card", ru: "Карточка участника", gr: "κάρτα υποψηφίου", gen: "карточки", acc: "карточку" },
   ];
   const MEET = [
     { k: "none", ru: "Ещё нет" },
@@ -437,7 +457,6 @@
     token: "greek-cert-token",
     cache: "greek-cert-cache",
     pending: "greek-cert-pending",
-    open: "greek-cert-open",
   };
   const TG_ICON = `<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M21.4 3.6 2.9 10.7c-1.3.5-1.2 1.2-.2 1.5l4.7 1.5 1.8 5.6c.2.6.4.8.8.8.4 0 .6-.2.9-.5l2.3-2.2 4.8 3.5c.9.5 1.5.2 1.7-.8l3.1-14.6c.3-1.3-.5-1.9-1.4-1.4ZM9.2 13.3l9.6-6c.5-.3.9 0 .5.3l-8 7.3-.3 3.4-1.8-5Z"/></svg>`;
 
@@ -457,7 +476,7 @@
   let people = new Map();
   const dirty = new Map(Object.entries(lsGet(LS.pending, {}))); // id -> body|null, ещё не на сервере
   const timers = new Map();
-  let open = new Set(lsGet(LS.open, []));
+  let editing = null;          // id карточки, открытой для изменения
   const keep = new Set();       // карточка не исчезает из фильтра, пока его не сменят
   const payDraft = new Map();
   let filter = "all", query = "", renderQueued = false;
@@ -538,10 +557,6 @@
     unpaid: (p) => paid(p) === 0,
   };
 
-  const subText = (p) => {
-    const tg = tgLink(p.tg);
-    return [tg ? tg.label : p.tg, p.contact, p.level ? "уровень " + p.level : ""].filter(Boolean).join(" · ") || "контакт не указан";
-  };
   const plural = (n, one, few, many) => {
     const m10 = n % 10, m100 = n % 100;
     if (m10 === 1 && m100 !== 11) return one;
@@ -556,8 +571,67 @@
       a[1].name.localeCompare(b[1].name, "ru", { sensitivity: "base" }) || a[1].created - b[1].created);
   }
 
-  function markHTML(label, lvl, title) {
-    return `<span class="mark m${lvl}" title="${esc(title)}">${lvl === 2 ? "✓ " : ""}${esc(label)}</span>`;
+  const PENCIL_ICON = `<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16v4ZM13.5 6.5l4 4"/></svg>`;
+
+  // Короткие строки для свёрнутой карточки — что уже есть и что делать дальше.
+  function docsFact(p) {
+    const missing = DOCS.filter((d) => !p.docs[d.k].recv);
+    const toPrint = DOCS.filter((d) => p.docs[d.k].recv && !p.docs[d.k].print);
+    if (allPrinted(p)) return `<span class="ok">✓ все три распечатаны</span>`;
+    const parts = [];
+    if (missing.length === DOCS.length) parts.push(`<span class="soft">ещё не прислали</span>`);
+    else if (missing.length) parts.push(`<span class="todo">нет ${missing.map((d) => d.gen).join(", ")}</span>`);
+    if (toPrint.length === DOCS.length) parts.push(`<span class="todo">распечатать все три</span>`);
+    else if (toPrint.length) parts.push(`<span class="todo">распечатать ${toPrint.map((d) => d.acc).join(", ")}</span>`);
+    const printed = DOCS.filter((d) => p.docs[d.k].print);
+    if (printed.length && missing.length) parts.push(`<span class="ok">✓ ${printed.map((d) => d.acc).join(", ")}</span>`);
+    return parts.join(" · ");
+  }
+
+  function meetFact(p) {
+    const note = p.meetNote.trim() ? ` — ${esc(p.meetNote.trim())}` : "";
+    if (p.meet === "done") return `<span class="ok">✓ документы у меня</span>${note}`;
+    if (p.meet === "agreed") return `договорились${note}`;
+    return `<span class="soft">ещё не договорились</span>${note}`;
+  }
+
+  function payFact(p) {
+    const sum = paid(p);
+    if (!sum) return `<span class="soft">не оплачено</span>`;
+    const n = p.payments.length;
+    return `<span class="ok">${esc(money(sum))}</span>${n > 1 ? ` <span class="soft">(${n} ${plural(n, "платёж", "платежа", "платежей")})</span>` : ""}`;
+  }
+
+  function certFact(p) {
+    if (p.certGiven) return `<span class="ok">✓ отдан владельцу</span>`;
+    if (p.certTaken) return `<span class="ok">у меня</span> <span class="soft">— осталось отдать</span>`;
+    return `<span class="soft">ещё не забран</span>`;
+  }
+
+  function summaryHTML(id, p) {
+    const st = stage(p);
+    const tg = tgLink(p.tg);
+    const sub = [tg ? tg.label : p.tg, p.contact, p.level ? p.level : ""].filter(Boolean).join(" · ");
+    const nameText = esc(p.name) || "Без имени";
+    return `<li class="card${tg ? " has-tg" : ""}" data-id="${esc(id)}" id="card-${esc(id)}">
+      <button class="card-main" type="button" data-act="edit" data-fk="${id}:edit" aria-label="${nameText}: открыть для изменения">
+        <span class="card-top">
+          <span class="name">${nameText}</span>
+          <span class="status-line"><span class="pill s-${st.k}">${st.ru}</span>${sub ? `<span class="sub">${esc(sub)}</span>` : ""}</span>
+        </span>
+        <dl class="facts">
+          <dt>Документы</dt><dd>${docsFact(p)}</dd>
+          <dt>Встреча</dt><dd>${meetFact(p)}</dd>
+          <dt>Оплата</dt><dd>${payFact(p)}</dd>
+          <dt>Сертификат</dt><dd>${certFact(p)}</dd>
+          ${p.note.trim() ? `<dt>Заметка</dt><dd><span class="note">${esc(p.note.trim())}</span></dd>` : ""}
+        </dl>
+      </button>
+      <div class="card-actions">
+        ${tg ? `<a class="icon-btn tg" href="${esc(tg.href)}" target="_blank" rel="noopener" aria-label="Написать в Telegram: ${esc(tg.label)}">${TG_ICON}</a>` : ""}
+        <button class="icon-btn" type="button" data-act="edit" aria-label="Изменить">${PENCIL_ICON}</button>
+      </div>
+    </li>`;
   }
 
   function tgHintHTML(p) {
@@ -569,19 +643,11 @@
   }
 
   function cardHTML(id, p) {
-    const st = stage(p);
-    const isOpen = open.has(id);
+    return editing === id ? editHTML(id, p) : summaryHTML(id, p);
+  }
+
+  function editHTML(id, p) {
     const tg = tgLink(p.tg);
-    const state = ["не прислали", "прислали, не распечатано", "распечатано"];
-    const marks = DOCS.map((d) => {
-      const s = p.docs[d.k];
-      const lvl = s.print ? 2 : s.recv ? 1 : 0;
-      return markHTML(d.short, lvl, `${d.ru}: ${state[lvl]}`);
-    }).join("") +
-      markHTML("встреча", p.meet === "done" ? 2 : p.meet === "agreed" ? 1 : 0,
-        { none: "Встреча: ещё не договорились", agreed: "Встреча: договорились", done: "Документы получены" }[p.meet]) +
-      (paid(p) ? markHTML(money(paid(p)), 2, "Оплачено") : markHTML("не оплачено", 0, "Оплат пока нет")) +
-      (p.certTaken ? markHTML(p.certGiven ? "отдан" : "сертификат", 2, p.certGiven ? "Сертификат отдан" : "Сертификат у меня") : "");
 
     const docRows = DOCS.map((d) => {
       const s = p.docs[d.k];
@@ -598,15 +664,12 @@
     const levels = ["", "A1", "A2", "B1", "B2", "C1", "C2"].map((l) =>
       `<option value="${l}"${p.level === l ? " selected" : ""}>${l || "—"}</option>`).join("");
 
-    return `<li class="card${tg ? " has-tg" : ""}" data-id="${esc(id)}" id="card-${esc(id)}">
-      <button class="card-head" type="button" data-act="toggle" aria-expanded="${isOpen}" aria-controls="body-${esc(id)}" data-fk="${id}:toggle">
-        <span class="who"><span class="name">${esc(p.name) || "Без имени"}</span><span class="sub">${esc(subText(p))}</span></span>
-        <span class="pill s-${st.k}">${st.ru}</span>
-        <span class="marks">${marks}</span>
-        <span class="chev" aria-hidden="true"></span>
-      </button>
-      ${tg ? `<a class="tg-quick" href="${esc(tg.href)}" target="_blank" rel="noopener" aria-label="Написать в Telegram: ${esc(tg.label)}">${TG_ICON}</a>` : ""}
-      <div class="card-body" id="body-${esc(id)}"${isOpen ? "" : " hidden"}>
+    return `<li class="card editing" data-id="${esc(id)}" id="card-${esc(id)}">
+      <div class="edit-head">
+        <span class="name">${esc(p.name) || "Без имени"}</span>
+        <button class="done-btn" type="button" data-act="done" data-fk="${id}:done">Готово</button>
+      </div>
+      <div class="card-body" id="body-${esc(id)}">
         <div class="sect">
           <h3>Документы</h3>
           ${docRows}
@@ -658,7 +721,10 @@
           <label class="lbl" for="${esc(id)}-note">Заметка
             <textarea class="field" id="${esc(id)}-note" data-field="note">${esc(p.note)}</textarea>
           </label>
-          <button class="danger" type="button" data-act="delete">Удалить из списка</button>
+          <div class="edit-foot">
+            <button class="danger" type="button" data-act="delete">Удалить из списка</button>
+            <button class="done-btn" type="button" data-act="done" data-fk="${id}:done-foot">Готово</button>
+          </div>
         </div>
       </div>
     </li>`;
@@ -924,17 +990,26 @@
     if (!p) return;
     const act = b.dataset.act;
 
-    if (act === "toggle") {
-      if (open.has(id)) open.delete(id); else open.add(id);
-      lsSet(LS.open, [...open]);
+    if (act === "edit") {
+      flushTimers();
+      editing = id;
+      keep.add(id);
       renderNow();
+      revealCard(id, "start");
+      return;
+    }
+    if (act === "done") {
+      flushTimers();
+      editing = null;
+      renderNow();
+      revealCard(id, "nearest");
       return;
     }
     if (act === "delete") {
       if (!confirm(`Удалить «${p.name || "без имени"}» из списка?`)) return;
       clearTimeout(timers.get(id)); timers.delete(id);
-      people.delete(id); open.delete(id); keep.delete(id);
-      lsSet(LS.open, [...open]);
+      people.delete(id); keep.delete(id);
+      if (editing === id) editing = null;
       persist(id); renderNow();
       return;
     }
@@ -980,7 +1055,6 @@
     p.updated = Date.now();
     keep.add(id);
     li.querySelector(".name").textContent = p.name || "Без имени";
-    li.querySelector(".sub").textContent = subText(p);
     if (f === "tg") {
       const hint = li.querySelector("[data-tg-hint]");
       if (hint) hint.innerHTML = tgHintHTML(p);
@@ -1045,15 +1119,31 @@
       note: String(fd.get("note") || "").trim(),
       created: Date.now(), updated: Date.now(),
     }));
-    open.add(id); keep.add(id);
-    lsSet(LS.open, [...open]);
+    keep.add(id);
     persist(id);
     $("addDlg").close();
     e.target.reset();
     renderNow();
+    revealCard(id, "center");
     const card = document.getElementById("card-" + id);
-    if (card) card.scrollIntoView({ block: "center", behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+    if (card) card.classList.add("fresh");
   });
+
+  // Прокрутка к карточке с поправкой на липкую панель фильтров.
+  function revealCard(id, where) {
+    const card = document.getElementById("card-" + id);
+    if (!card) return;
+    const barH = bar.getBoundingClientRect().height + 8;
+    const r = card.getBoundingClientRect();
+    let top = null;
+    if (where === "start") top = window.scrollY + r.top - barH;
+    else if (where === "center") top = window.scrollY + r.top - (window.innerHeight - r.height) / 2;
+    else if (r.top < barH) top = window.scrollY + r.top - barH;
+    else if (r.bottom > window.innerHeight) top = window.scrollY + r.bottom - window.innerHeight + 16;
+    if (top !== null) {
+      window.scrollTo({ top: Math.max(0, top), behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+    }
+  }
 
   const bar = $("bar");
   window.addEventListener("scroll", () => {
