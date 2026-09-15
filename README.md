@@ -8,12 +8,16 @@
 - Данные: Cloudflare Worker `greek-certs` → https://greek-certs.norevia.workers.dev, база D1 `greek-certs`.
   В репозитории данных нет — только код.
 
-## Пароль
+## Доступ
 
-Задаётся один раз секретом воркера (и так же меняется; смена выходит со всех устройств):
+Пароля нет: страница открывается по личной ссылке `https://konyaginaan.github.io/greek-certificates/#k=КЛЮЧ`.
+Часть после `#` не уходит на GitHub, страница запоминает ключ на устройстве и шлёт его воркеру.
+Без ключа воркер ничего не отдаёт. Сам ключ — секрет воркера `APP_KEY`, в репозитории его нет.
+
+Сменить ключ (старая ссылка перестанет работать везде):
 
 ```bash
-npx wrangler secret put APP_PASSWORD
+openssl rand -base64 30 | tr "+/" "-_" | tr -d "=\n" | npx wrangler secret put APP_KEY
 ```
 
 ## Правки
@@ -22,5 +26,5 @@ npx wrangler secret put APP_PASSWORD
 - сервер — `npm run deploy`;
 - схема базы — `schema.sql`, применяется `npx wrangler d1 execute greek-certs --remote --file schema.sql`.
 
-Локально: `.dev.vars` с `APP_PASSWORD=...`, `npx wrangler dev --port 8788`, страница с `localhost`
+Локально: `.dev.vars` с `APP_KEY=...`, `npx wrangler dev --port 8788`, страница с `localhost`
 сама ходит на `http://localhost:8788`.

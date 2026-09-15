@@ -2,20 +2,14 @@
  * API учёта сертификатов. Страница — на GitHub Pages, здесь только данные.
  *
  * Секрет:
- *   APP_PASSWORD — пароль входа (wrangler secret put APP_PASSWORD).
- *
- * Сессия без хранения: токен `срок.подпись`, подпись — HMAC от пароля,
- * поэтому смена пароля разом выходит со всех устройств. Токен ходит
- * в заголовке Authorization: куки между github.io и workers.dev Safari
- * всё равно режет как сторонние.
+ *   APP_KEY — ключ доступа из личной ссылки (…/#k=КЛЮЧ). Страница шлёт его
+ *   в заголовке Authorization; без него сервер ничего не отдаёт. Смена ключа
+ *   (wrangler secret put APP_KEY) отключает старую ссылку на всех устройствах.
  */
 
 const ALLOWED_ORIGINS = ["https://konyaginaan.github.io"];
-const SESSION_DAYS = 180;
 const MAX_BODY = 64 * 1024;
 const MAX_PEOPLE = 2000;
-const FAIL_WINDOW_MS = 15 * 60 * 1000;
-const FAIL_LIMIT = 10;
 const CURRENCIES = ["€", "₽", "$"];
 
 export default {
@@ -58,13 +52,12 @@ async function route(request, env, url) {
   const method = request.method;
 
   if (pathname === "/api/health" && method === "GET") {
-    return json({ ok: true, configured: !!env.APP_PASSWORD });
+    return json({ ok: true, configured: !!env.APP_KEY });
   }
-  if (pathname === "/api/login" && method === "POST") return login(request, env);
 
   if (!pathname.startsWith("/api/")) return json({ error: "not_found" }, 404);
-  if (!env.APP_PASSWORD) return json({ error: "not_configured" }, 503);
-  if (!(await hasSession(request, env))) return json({ error: "unauthorized" }, 401);
+  if (!env.APP_KEY) return json({ error: "not_configured" }, 503);
+  if (!hasKey(request, env)) return json({ error: "unauthorized" }, 401);
 
   if (pathname === "/api/data" && method === "GET") return readAll(env);
   if (pathname === "/api/settings" && method === "PUT") return saveSettings(request, env);
@@ -121,43 +114,11 @@ async function saveSettings(request, env) {
   return json({ ok: true });
 }
 
-/* ---------- вход ---------- */
+/* ---------- доступ ---------- */
 
-async function login(request, env) {
-  if (!env.APP_PASSWORD) return json({ error: "not_configured" }, 503);
-  const now = Date.now();
-  const { n } = await env.DB.prepare("SELECT COUNT(*) AS n FROM login_fail WHERE ts > ?1")
-    .bind(now - FAIL_WINDOW_MS).first();
-  if (n >= FAIL_LIMIT) return json({ error: "too_many_attempts" }, 429);
-
-  const { password } = await request.json().catch(() => ({}));
-  if (typeof password !== "string" || !password) return json({ error: "bad_request" }, 400);
-
-  const ok = sameSecret(await sign(env, "pw:" + password), await sign(env, "pw:" + env.APP_PASSWORD));
-  if (!ok) {
-    await env.DB.batch([
-      env.DB.prepare("INSERT INTO login_fail (ts) VALUES (?1)").bind(now),
-      env.DB.prepare("DELETE FROM login_fail WHERE ts < ?1").bind(now - 24 * 60 * 60 * 1000),
-    ]);
-    return json({ error: "wrong_password" }, 403);
-  }
-  const exp = now + SESSION_DAYS * 24 * 60 * 60 * 1000;
-  return json({ token: `${exp}.${await sign(env, "session:" + exp)}` });
-}
-
-async function hasSession(request, env) {
-  const auth = request.headers.get("Authorization") || "";
-  const m = auth.match(/^Bearer (\d+)\.([0-9a-f]{64})$/);
-  if (!m || Number(m[1]) < Date.now()) return false;
-  return sameSecret(await sign(env, "session:" + m[1]), m[2]);
-}
-
-async function sign(env, data) {
-  const key = await crypto.subtle.importKey(
-    "raw", new TextEncoder().encode(env.APP_PASSWORD), { name: "HMAC", hash: "SHA-256" }, false, ["sign"],
-  );
-  const bytes = new Uint8Array(await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(data)));
-  return [...bytes].map((b) => b.toString(16).padStart(2, "0")).join("");
+function hasKey(request, env) {
+  const m = (request.headers.get("Authorization") || "").match(/^Bearer (\S+)$/);
+  return !!m && sameSecret(m[1], env.APP_KEY);
 }
 
 function sameSecret(a, b) {

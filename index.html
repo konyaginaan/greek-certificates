@@ -342,14 +342,6 @@
   }
   .login h2 { margin: 0; font-size: 20px; }
   .login p { margin: 0; color: var(--muted); max-width: 60ch; }
-  .login .primary { justify-self: stretch; }
-  .login-error { color: var(--danger); font-size: 14px; min-height: 1.45em; }
-
-  .foot { margin-top: 28px; display: flex; justify-content: center; }
-  .link-btn {
-    background: none; border: 0; color: var(--muted); font-size: 14px; min-height: 40px;
-    text-decoration: underline; text-underline-offset: 3px;
-  }
 </style>
 </head>
 <body>
@@ -371,15 +363,10 @@
     </div>
   </header>
 
-  <form class="login" id="login" hidden>
-    <h2>Вход</h2>
-    <p>Введите пароль, заданный на сервере. На этом устройстве вход запомнится на полгода.</p>
-    <label class="lbl" for="login-password">Пароль
-      <input class="field" id="login-password" type="password" autocomplete="current-password" required>
-    </label>
-    <div class="login-error" id="loginError" role="alert"></div>
-    <button class="primary" type="submit" id="loginBtn">Войти</button>
-  </form>
+  <section class="login" id="login" hidden>
+    <h2>Нужна личная ссылка</h2>
+    <p id="loginText">Эта страница открывается только по личной ссылке с ключом доступа. Откройте её по своей ссылке — устройство запомнит ключ.</p>
+  </section>
 
   <main id="app" hidden>
     <div class="bar" id="bar">
@@ -387,7 +374,6 @@
       <input class="search" id="search" type="search" placeholder="Поиск по имени, контакту, заметке" autocomplete="off">
     </div>
     <ul class="list" id="list" aria-live="polite"></ul>
-    <div class="foot"><button class="link-btn" type="button" id="logout">Выйти на этом устройстве</button></div>
   </main>
 </div>
 
@@ -462,7 +448,11 @@
   const lsSet = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
   const lsDel = (k) => { try { localStorage.removeItem(k); } catch (e) {} };
 
-  let token = lsGet(LS.token, null);
+  // Ключ доступа живёт в ссылке: …/greek-certificates/#k=КЛЮЧ. Часть после # не уходит
+  // на GitHub; из адреса её не убираем, чтобы «На экран Домой» сохранил ссылку с ключом.
+  const hashKey = (location.hash.match(/[#&]k=([A-Za-z0-9_-]{20,})/) || [])[1];
+  if (hashKey) lsSet(LS.token, hashKey);
+  let token = hashKey || lsGet(LS.token, null);
   let mode = "loading";         // loading | login | ready
   let people = new Map();
   const dirty = new Map(Object.entries(lsGet(LS.pending, {}))); // id -> body|null, ещё не на сервере
@@ -895,9 +885,11 @@
 
   function sessionExpired() {
     token = null;
-    lsDel(LS.token);
+    [LS.token, LS.cache, LS.pending].forEach(lsDel);
+    dirty.clear();
+    people = new Map();
     mode = "login";
-    $("loginError").textContent = "Вход устарел — введите пароль ещё раз.";
+    $("loginText").textContent = "Ключ в ссылке не подходит. Откройте страницу по актуальной личной ссылке.";
     renderNow();
   }
 
@@ -920,44 +912,6 @@
     if (typeof dlg.showModal === "function") dlg.showModal(); else dlg.setAttribute("open", "");
     setTimeout(() => $("new-name").focus(), 30);
   }
-
-  $("login").addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const input = $("login-password");
-    const btn = $("loginBtn");
-    const err = $("loginError");
-    err.textContent = "";
-    btn.disabled = true;
-    try {
-      const data = await api("POST", "/api/login", { password: input.value });
-      token = data.token;
-      lsSet(LS.token, token);
-      input.value = "";
-      start();
-    } catch (ex) {
-      err.textContent = {
-        wrong_password: "Неверный пароль.",
-        too_many_attempts: "Слишком много попыток. Подождите 15 минут.",
-        not_configured: "Пароль на сервере ещё не задан.",
-        offline: "Нет связи с сервером. Проверьте интернет.",
-      }[ex.code] || "Не получилось войти. Попробуйте ещё раз.";
-    } finally {
-      btn.disabled = false;
-    }
-  });
-
-  $("logout").addEventListener("click", () => {
-    flushTimers();
-    if (dirty.size && !confirm("Часть изменений ещё не дошла до сервера и пропадёт. Всё равно выйти?")) return;
-    token = null;
-    [LS.token, LS.cache, LS.pending].forEach(lsDel);
-    dirty.clear();
-    people = new Map();
-    everSynced = false;
-    mode = "login";
-    $("loginError").textContent = "";
-    renderNow();
-  });
 
   list.addEventListener("click", (e) => {
     const b = e.target.closest("[data-act]");

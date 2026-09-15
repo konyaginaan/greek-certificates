@@ -10,7 +10,3 @@ CREATE TABLE IF NOT EXISTS settings (
   v TEXT NOT NULL
 );
 
--- Неудачные входы: после 10 попыток за 15 минут вход временно закрыт.
-CREATE TABLE IF NOT EXISTS login_fail (
-  ts INTEGER NOT NULL
-);
